@@ -77,7 +77,6 @@ services:
     image: dpage/pgadmin4:9.8
     restart: unless-stopped
     ports:
-      - "5050:5050"
       - "8080:80"
     environment:
       PGADMIN_DEFAULT_EMAIL: /run/secrets/pgadmin_email
@@ -85,7 +84,7 @@ services:
     depends_on:
       - postgres
     volumes:
-    - ./pgadmin-entrypoint.sh:/pgadmin-entrypoint.sh:ro
+    - ./db/pgadmin-entrypoint.sh:/pgadmin-entrypoint.sh:ro
     entrypoint: ["/bin/sh", "/pgadmin-entrypoint.sh"]
     secrets:
       - pgadmin_email
