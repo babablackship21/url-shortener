@@ -1,0 +1,102 @@
+
+services:
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./caddy/caddy_data:/data
+      - ./caddy/caddy_config:/config
+    depends_on:
+      # - web
+      - app
+
+  web:
+    build: ./web
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    expose:
+      - "3000"
+    volumes:
+      - ./web:/app
+      - /app/node_modules
+    depends_on:
+      - app
+
+  app:
+    build: ./app
+    restart: unless-stopped
+    command: uvicorn main:app --reload --host 0.0.0.0 --port 8000
+    environment:
+      POSTGRES_USER: /run/secrets/postgres_user
+      POSTGRES_DB: /run/secrets/postgres_db
+      POSTGRES_PASSWORD: /run/secrets/postgres_password
+    secrets:
+      - postgres_user
+      - postgres_password
+      - postgres_db
+    expose:
+      - "8000"
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+    volumes:
+      - ./app:/app
+
+  postgres:
+    image: postgres:18
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    expose:
+      - "5432"
+    environment:
+      POSTGRES_DB_FILE: /run/secrets/postgres_db
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    secrets:
+      - postgres_password
+      - postgres_db
+    volumes:
+      - ./db/postgres_data:/var/lib/postgresql
+      - ./db/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+
+  pgadmin:
+    image: dpage/pgadmin4:9.8
+    restart: unless-stopped
+    ports:
+      - "5050:5050"
+      - "8080:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: /run/secrets/pgadmin_email
+      PGADMIN_DEFAULT_PASSWORD: /run/secrets/pgadmin_password
+    depends_on:
+      - postgres
+    volumes:
+    - ./pgadmin-entrypoint.sh:/pgadmin-entrypoint.sh:ro
+    entrypoint: ["/bin/sh", "/pgadmin-entrypoint.sh"]
+    secrets:
+      - pgadmin_email
+      - pgadmin_password
+
+volumes:
+  # caddy_data:
+  # caddy_config:
+  postgres_data:
+
+secrets:
+  postgres_user:
+    file: ./secrets/postgres_user.txt
+  postgres_password:
+    file: ./secrets/postgres_password.txt
+  postgres_db:
+    file: ./secrets/postgres_db.txt
+  pgadmin_email:
+    file: ./secrets/pgadmin_email.txt
+  pgadmin_password:
+    file: ./secrets/pgadmin_password.txt
