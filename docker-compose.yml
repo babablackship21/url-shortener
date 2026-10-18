@@ -78,7 +78,7 @@ services:
     depends_on:
       - postgres
     volumes:
-    - ./pgadmin-entrypoint.sh:/pgadmin-entrypoint.sh:ro
+    - ./db/pgadmin-entrypoint.sh:/pgadmin-entrypoint.sh:ro
     entrypoint: ["/bin/sh", "/pgadmin-entrypoint.sh"]
     secrets:
       - pgadmin_email
