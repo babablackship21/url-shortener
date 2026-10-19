@@ -1,0 +1,95 @@
+name: url-shortener-prod
+
+services:
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-:80}
+    volumes:
+      - ./caddy/Caddyfile.prod:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      web:
+        condition: service_healthy
+      app:
+        condition: service_healthy
+
+  web:
+    image: ${IMAGE_PREFIX:?Set IMAGE_PREFIX}-web:${IMAGE_TAG:?Set IMAGE_TAG}
+    restart: unless-stopped
+    environment:
+      ORIGIN: ${PUBLIC_ORIGIN:?Set PUBLIC_ORIGIN}
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  app:
+    image: ${IMAGE_PREFIX:?Set IMAGE_PREFIX}-app:${IMAGE_TAG:?Set IMAGE_TAG}
+    restart: unless-stopped
+    environment:
+      ENV: prod
+      API_BASE_URL: ${PUBLIC_ORIGIN:?Set PUBLIC_ORIGIN}/api
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: /run/secrets/postgres_user
+      POSTGRES_PASSWORD: /run/secrets/postgres_password
+      POSTGRES_DB: /run/secrets/postgres_db
+      GOOGLE_SAFE_BROWSING_API_URL: ${GOOGLE_SAFE_BROWSING_API_URL:?Set Safe Browsing endpoint}
+      GOOGLE_SAFE_BROWSING_API_KEY: /run/secrets/google_safe_browsing_api_key
+    secrets:
+      - postgres_user
+      - postgres_password
+      - postgres_db
+      - google_safe_browsing_api_key
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/', timeout=4)"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  postgres:
+    image: postgres:18
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER_FILE: /run/secrets/postgres_user
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      POSTGRES_DB_FILE: /run/secrets/postgres_db
+    secrets:
+      - postgres_user
+      - postgres_password
+      - postgres_db
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$(cat /run/secrets/postgres_user)\" -d \"$$(cat /run/secrets/postgres_db)\""]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  postgres_data:
+  caddy_data:
+  caddy_config:
+
+secrets:
+  postgres_user:
+    file: ./secrets/postgres_user.txt
+  postgres_password:
+    file: ./secrets/postgres_password.txt
+  postgres_db:
+    file: ./secrets/postgres_db.txt
+  google_safe_browsing_api_key:
+    file: ./secrets/google_safe_browsing_api_key.txt
