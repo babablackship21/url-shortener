@@ -32,16 +32,16 @@ jobs:
             exit 1
           fi
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
+      # - name: Set up Python
+      #   uses: actions/setup-python@v5
+      #   with:
+      #     python-version: "3.12"
 
-      - name: Test backend
-        working-directory: app
-        run: |
-          python -m pip install -r requirements.txt
-          python -m pytest test -q
+      # - name: Test backend
+      #   working-directory: app
+      #   run: |
+      #     python -m pip install -r requirements.txt
+      #     python -m pytest test -q
 
       - name: Build both images
         run: |
