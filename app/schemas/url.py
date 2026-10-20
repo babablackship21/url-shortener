@@ -7,10 +7,10 @@ class URLCreateRequest(BaseModel):
     original_url: HttpUrl
     custom_code: str | None = Field(
         default=None,
-        min_length=3,
+        min_length=4,
         max_length=16,
         pattern=r"^[a-zA-Z0-9_-]+$",
-        description="Optional custom short code (3-16 alphanumeric characters, hyphens or underscores).",
+        description="Optional custom short code (4-16 alphanumeric characters, hyphens or underscores).",
     )
 
 class URLResponse(BaseModel):

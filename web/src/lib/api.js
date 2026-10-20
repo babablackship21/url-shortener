@@ -43,7 +43,7 @@ async function handleResponse(res) {
 /**
  * 1. Create a shortened URL
  * @param {string} originalUrl - The destination long URL
- * @param {string|null} [customCode] - Optional custom alias (3-16 chars)
+ * @param {string|null} [customCode] - Optional custom alias (4-16 chars)
  * @returns {Promise<{ original_url: string, short_url: string }>}
  */
 export async function createShortUrl(originalUrl, customCode = null) {

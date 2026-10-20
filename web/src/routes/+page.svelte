@@ -206,10 +206,11 @@
                     type="text"
                     bind:value={customCode}
                     placeholder="my-cool-link"
+                    minlength="4"
                     maxlength="16"
                   />
                 </div>
-                <p class="field-hint">Up to 16 alphanumeric characters, dashes, or underscores.</p>
+                <p class="field-hint">4–16 alphanumeric characters, dashes, or underscores.</p>
               </div>
             {/if}
           </div>
