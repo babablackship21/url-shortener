@@ -1,4 +1,4 @@
-name: Test, build and deploy
+name: Build, test and deploy
 
 on:
   push:
@@ -17,7 +17,8 @@ env:
   IMAGE_PREFIX: ${{ vars.IMAGE_PREFIX }}
 
 jobs:
-  build-and-push:
+  build:
+    name: Build and push images
     runs-on: ubuntu-24.04
 
     steps:
@@ -31,17 +32,6 @@ jobs:
             echo "Set repository variable IMAGE_PREFIX to ghcr.io/owner/image-name (lowercase)."
             exit 1
           fi
-
-      # - name: Set up Python
-      #   uses: actions/setup-python@v5
-      #   with:
-      #     python-version: "3.12"
-
-      # - name: Test backend
-      #   working-directory: app
-      #   run: |
-      #     python -m pip install -r requirements.txt
-      #     python -m pytest test -q
 
       - name: Build both images
         run: |
@@ -59,8 +49,33 @@ jobs:
           docker push "$IMAGE_PREFIX-app:$GITHUB_SHA"
           docker push "$IMAGE_PREFIX-web:$GITHUB_SHA"
 
+  test:
+    name: Test backend
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install backend dependencies
+        working-directory: app
+        run: python -m pip install -r requirements.txt
+
+      - name: Run backend tests
+        working-directory: app
+        run: python -m pytest test -q
+
   deploy:
-    needs: build-and-push
+    name: Deploy to EC2
+    needs: [build, test]
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     timeout-minutes: 15
