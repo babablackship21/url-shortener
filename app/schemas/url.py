@@ -1,5 +1,6 @@
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, HttpUrl
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl, computed_field
+from utils.link_policy import PROTECTED_SHORT_CODES
 
 
 class URLCreateRequest(BaseModel):
@@ -20,6 +21,11 @@ class URLResponse(BaseModel):
     original_url: str
     clicks: int
     created_at: datetime | None = None
+
+    @computed_field
+    @property
+    def can_delete(self) -> bool:
+        return self.short_code not in PROTECTED_SHORT_CODES
 
 
 class URLCreateResponse(BaseModel):

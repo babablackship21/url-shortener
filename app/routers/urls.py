@@ -5,6 +5,7 @@ from db import get_db
 from models.url import URLItem
 from schemas.url import URLCreateRequest, URLCreateResponse, URLResponse
 from utils.short_code import generate_short_code
+from utils.link_policy import PROTECTED_SHORT_CODES
 from utils.safe_search import check_url_safety
 from config import BASE_URL
 from utils.url_store import increment_clicks, insert_url_if_available
@@ -104,7 +105,14 @@ def delete_short_url(
     short_code: str,
     db: Session = Depends(get_db),
 ):
-    """Delete a URL and confirm its code; raise HTTP 404 when absent."""
+    """Delete an unprotected URL; reject protected codes with HTTP 403."""
+    short_code = short_code.strip()
+    if short_code in PROTECTED_SHORT_CODES:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Short URL '{short_code}' is protected and cannot be deleted.",
+        )
+
     item = (
         db.query(URLItem)
         .filter(URLItem.short_code == short_code.strip())
