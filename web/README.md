@@ -40,7 +40,6 @@ The production Dockerfile and Compose configuration supply these values:
 | Variable | When used | Purpose and source |
 | --- | --- | --- |
 | `VITE_API_BASE_URL` | Image build |  `Dockerfile.prod` sets it to `/api`. |
-.
 
 ## Production build and deployment
 

@@ -30,6 +30,7 @@ Caddy is the shared entry point. It forwards page requests to SvelteKit and `/ap
 | [app](app/README.md) | FastAPI routes, validation, safety checks, and database transactions |
 | PostgreSQL | Destinations, unique short codes, creation times, and click counts |
 | [caddy](caddy/) | Reverse proxy and production TLS termination |
+| [docker-compose.prod.yml](docker-compose.prod.yml) | Production stack with commit-tagged images, service health checks, secrets, and persistent storage |
 | [.github/workflows/deploy.yml](.github/workflows/deploy.yml) | Container builds, GHCR publishing, and EC2 deployment |
 
 SQLAlchemy manages database access. Inserts use conflict handling, and click counters use an atomic update to avoid lost increments during concurrent requests. PostgreSQL data persists outside application containers. 
