@@ -105,7 +105,7 @@
       Shorten links, <span class="highlight">expand reach.</span>
     </h1>
     <p class="hero-subtitle">
-      Create clean short links connected directly to your PostgreSQL database, or look up and verify original destinations.
+      Create clean short links, or look up and verify original destinations.
     </p>
   </section>
 

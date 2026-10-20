@@ -147,7 +147,6 @@
         <span class="active">Admin Dashboard</span>
       </div>
       <h1 class="page-title">All Created Short URLs</h1>
-      <p class="page-subtitle">Directly connected to PostgreSQL table via FastAPI <code class="mono">GET /api/url/</code></p>
     </div>
 
     <!-- Header Actions including Seed and Delete Mock Links -->
@@ -416,6 +415,7 @@
 
                 <!-- Actions -->
                 <td class="right action-cell">
+                  <div class="action-buttons">
                   <button
                     type="button"
                     class="action-btn copy"
@@ -435,6 +435,7 @@
                     Test ↗
                   </a>
 
+                  {#if item.can_delete === true}
                   <button
                     type="button"
                     class="action-btn delete"
@@ -446,6 +447,8 @@
                       <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                     </svg>
                   </button>
+                  {/if}
+                  </div>
                 </td>
               </tr>
             {/each}
@@ -458,7 +461,7 @@
 
 <style>
   .admin-container {
-    max-width: 1100px;
+    max-width: 1500px;
     margin: 0 auto;
     padding: 2.5rem 1.25rem 5rem;
     width: 100%;
@@ -938,9 +941,17 @@
     white-space: nowrap;
   }
 
+  .action-buttons {
+    display: inline-grid;
+    grid-template-columns: 3.5rem 4rem 2.25rem;
+    gap: 0.25rem;
+    align-items: center;
+  }
+
   .action-btn {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     padding: 0.4rem 0.65rem;
     border-radius: 6px;
     font-size: 0.75rem;
@@ -949,7 +960,6 @@
     background: #ffffff;
     color: var(--text-muted);
     cursor: pointer;
-    margin-left: 0.25rem;
     transition: all 0.15s ease;
   }
 
@@ -964,7 +974,12 @@
     background: var(--emerald-50);
   }
 
-  .action-btn.delete:hover {
+  .action-btn.delete:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .action-btn.delete:hover:not(:disabled) {
     color: #dc2626;
     border-color: #fecaca;
     background: #fef2f2;
