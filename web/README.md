@@ -1,27 +1,60 @@
-# SvelteKit URL Shortener Frontend
+﻿# Frontend service
 
-A clean and sleek frontend built with **JavaScript** and **SvelteKit**, connected directly to the FastAPI backend.
+SvelteKit and JavaScript provide URL creation, destination lookup, and link management. In production, the SvelteKit Node adapter serves the application behind Caddy on EC2. See the [root README](../README.md) for the system architecture.
 
 ## Features
 
-1. **Shorten URL (`/`)**: Enter a long destination URL with optional custom alias. Calls `POST /api/url/`.
-2. **Retrieve URL (`/`)**: Look up original destination by short code or full short URL. Calls `GET /api/url/{short_code}`.
-3. **Admin Dashboard (`/admin`)**: View all created short links, track total clicks, search/filter, copy, test, and delete links. Calls `GET /api/url/` and `DELETE /api/url/{short_code}`.
-4. **Empty State Handling**: Elegant empty state when the project just started and 0 URLs exist in PostgreSQL.
-5. **Direct Link Resolver (`/[short_code]`)**: Shows a loading animation while resolving, redirects to original destination, or displays not-found state if the link does not exist.
+- **Shorten URL (`/`):** Create a short link with an optional custom alias using `POST /api/url/`.
+- **Retrieve URL (`/`):** Inspect a destination by short code or full short URL using `GET /api/url/{short_code}`.
+- **Admin dashboard (`/admin`):** List links, view clicks, filter, copy, test, seed, and delete. Search and totals cover the currently fetched page.
+- **Empty state:** Displays a message when no links are available.
+- **Link resolver (`/[short_code]`):** Looks up a destination and redirects the browser, or displays a not-found state.
 
-## Getting Started
+## Modules
 
-### 1. Install Dependencies
-```bash
-npm install
+| Path | Responsibility |
+| --- | --- |
+| `src/routes/` | Home, admin, and short-code resolver pages |
+| `src/routes/+layout.svelte` | Shared layout |
+| `src/lib/Navbar.svelte` | Navigation |
+| `src/lib/api.js` | API requests, response errors, and short-link helpers |
+| `src/app.css` | Global styles |
+
+## Production routing
+
+Caddy is the public entry point. It forwards pages and assets to `web:3000` and `/api/*` requests to `app:8000`, removing the `/api` prefix.
+
+For example, when the public origin is `https://example.com`:
+
+```text
+Browser: https://example.com/          -> Caddy -> web:3000
+Browser: https://example.com/api/url/  -> Caddy -> app:8000/url/
 ```
 
-### 2. Run the Development Server
+The browser uses `/api` relative to the public origin, so frontend and API requests share the same origin. The frontend container's port is accessible over the Docker network and is not published to the host in production. 
+
+## Environment variables
+
+The production Dockerfile and Compose configuration supply these values:
+
+| Variable | When used | Purpose and source |
+| --- | --- | --- |
+| `VITE_API_BASE_URL` | Image build |  `Dockerfile.prod` sets it to `/api`. |
+.
+
+## Production build and deployment
+
+From the repository root, the production image can be built with:
+
 ```bash
-npm run dev
+docker build -f web/Dockerfile.prod -t url-shortener-web ./web
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+The Dockerfile installs dependencies with `npm ci`, runs `npm run build`, removes development dependencies, and starts the generated Node server with `node build`.
 
-In development, Vite proxies requests from `/api/*` to the FastAPI backend running at `http://127.0.0.1:8000/api/*`.
+To validate production compilation from `web/` using Node.js 22:
+
+```bash
+npm ci
+npm run build
+```
