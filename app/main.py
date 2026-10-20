@@ -1,13 +1,13 @@
 import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from db import Base, engine
 from routers import health, redirect, seed, urls
-from log_config import config_logger
+from log_config import configure_logging
+from middleware.request_logging import RequestLoggingMiddleware
 logger = logging.getLogger(__name__)
 
 
@@ -16,7 +16,7 @@ async def lifespan(app: FastAPI):
     """
     Create tables at startup, fail on initialization errors, and dispose on shutdown.
     """
-    config_logger()
+    configure_logging()
     try:
         Base.metadata.create_all(bind=engine)
         yield
@@ -34,6 +34,8 @@ app = FastAPI(
 )
 
 
+
+app.add_middleware(RequestLoggingMiddleware)
 
 # Register routers
 app.include_router(health.router)
