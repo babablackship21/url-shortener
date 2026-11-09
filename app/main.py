@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from fastapi.middleware.cors import CORSMiddleware
 
 from db import Base, engine
 from routers import health, redirect, seed, urls
@@ -31,6 +32,14 @@ app = FastAPI(
     version="1.0.0",
     root_path="/api",
     lifespan=lifespan,
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Use ["*"] to allow all origins (not recommended with credentials)
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all HTTP methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allow all headers
 )
 
 
